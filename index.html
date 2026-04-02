@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>과일 룰렛</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      z-index: 2;
+      position: relative;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    #roulette {
+      font-size: 40px;
+      font-weight: bold;
+      margin: 20px 0;
+      min-height: 60px;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      background: #ff9800;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #f57c00;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fireworks"></canvas>
+
+  <div class="container">
+    <h1>과일 룰렛</h1>
+    <div id="roulette">🍓 🍌 🍇</div>
+    <button onclick="spinRoulette()">룰렛 돌리기</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const fruits = ["딸기 🍓", "바나나 🍌", "포도 🍇"];
+    const roulette = document.getElementById("roulette");
+    const result = document.getElementById("result");
+
+    function spinRoulette() {
+      let count = 0;
+      result.textContent = "";
+
+      const interval = setInterval(() => {
+        roulette.textContent = fruits[Math.floor(Math.random() * fruits.length)];
+        count++;
+
+        if (count > 20) {
+          clearInterval(interval);
+          showFinalResult();
+        }
+      }, 100);
+    }
+
+    function showFinalResult() {
+      const r = Math.floor(Math.random() * 10000);
+
+      if (r < 10) { // 0.1%
+        roulette.textContent = "🎉 JACKPOT 🎉";
+        result.textContent = "축하합니다! 잭팟 당첨!";
+        launchFireworks();
+      } else {
+        const fruitIndex = (r - 10) % 3;
+        roulette.textContent = fruits[fruitIndex];
+        result.textContent = `결과: ${fruits[fruitIndex]}`;
+      }
+    }
+
+    const canvas = document.getElementById("fireworks");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particles = [];
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    function launchFireworks() {
+      for (let i = 0; i < 6; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height * 0.6;
+        createExplosion(x, y);
+      }
+      animateParticles();
+    }
+
+    function createExplosion(x, y) {
+      const colors = ["#ff3b3b", "#ffd93b", "#3bff57", "#3bd1ff", "#d63bff", "#ffffff"];
+      for (let i = 0; i < 50; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 2;
+        particles.push({
+          x,
+          y,
+          dx: Math.cos(angle) * speed,
+          dy: Math.sin(angle) * speed,
+          life: 60,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          size: Math.random() * 3 + 2
+        });
+      }
+    }
+
+    function animateParticles() {
+      let animationCount = 0;
+
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach((p) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+
+          p.x += p.dx;
+          p.y += p.dy;
+          p.dy += 0.03;
+          p.life--;
+        });
+
+        particles = particles.filter((p) => p.life > 0);
+        animationCount++;
+
+        if (particles.length > 0 && animationCount < 200) {
+          requestAnimationFrame(loop);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      loop();
+    }
+  </script>
+</body>
+</html>
